@@ -9,6 +9,7 @@ const client = new Client({
 		Intents.FLAGS.GUILDS,
 		Intents.FLAGS.GUILD_MESSAGES,
 		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+		Intents.FLAGS.DIRECT_MESSAGES,
 	],
 });
 
@@ -19,26 +20,31 @@ console.log(db);
 let { currentNum, lastUser } = dbParsed;
 
 client.on('messageCreate', message => {
-	if (message.channel.id !== process.env.channelId) return;
-	const number = Number.parseInt(message.content);
+	if (!message.guild) {
+		currentNum = 0;
+		lastUser = null;
+	} else {
+		if (message.channel.id !== process.env.channelId) return;
+		const number = Number.parseInt(message.content);
 
-	if (isNaN(number)) {
-		message.delete();
-		return;
-	}
+		if (isNaN(number)) {
+			message.delete();
+			return;
+		}
 
-	if (currentNum + 1 !== number) {
-		message.delete();
-		return;
-	}
+		if (currentNum + 1 !== number) {
+			message.delete();
+			return;
+		}
 
-	if (lastUser === message.author.id) {
-		message.delete();
-		return;
+		if (lastUser === message.author.id) {
+			message.delete();
+			return;
+		}
+		// message.react('✅');
+		currentNum++;
+		lastUser = message.author.id;
 	}
-	// message.react('✅');
-	currentNum++;
-	lastUser = message.author.id;
 	client.user?.setActivity({ name: `Current Number: ${currentNum}` });
 	dbParsed.currentNum = currentNum;
 	dbParsed.lastUser = lastUser;
